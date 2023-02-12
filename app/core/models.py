@@ -8,6 +8,7 @@ from django.contrib.auth.models import (
 )
 from django.db import models
 
+
 class UserManager(BaseUserManager):
     """Manager for system Users."""
 
@@ -38,3 +39,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = "email"
+
+    class Meta:
+
+        permissions = (
+            ("basic", "To get basic pic"),
+            ("premium", "To get bigger pic"),
+            ("enterprise", "To get pic and link"),
+            ("custom", "Custom"),
+        )
