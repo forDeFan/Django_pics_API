@@ -19,4 +19,6 @@ urlpatterns = [
         SpectacularSwaggerView.as_view(url_name="api-schema"),
         name="api-docs",
     ),
-]
+    # All images.urls endpoints included
+    path("api/images/", include("images.urls")),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
