@@ -7,6 +7,7 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 from django.db import models
+from images.models import Tier
 
 
 class UserManager(BaseUserManager):
@@ -21,7 +22,8 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email: str, password: str) -> User:
+    def create_superuser(self, email: str, password: str
+    ) -> User:
         """Create, save and return system supersuer/ admin."""
         user = self.create_user(email=email, password=password)
         user.is_superuser = True
@@ -32,19 +34,17 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     """Class for system User."""
 
+    # Default id=1 in tier field taken from command where default tier is created 
+    # default value set to this id in order to avoid not-null constraint error
+    # at supersuser creation (tier do not exist in db yet).
+
     email = models.EmailField(max_length=255, unique=True)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, default="Basic")
+    tier = models.ForeignKey(
+        Tier, on_delete=models.DO_NOTHING, default="1"
+    )
     is_staff = models.BooleanField(default=True)
     is_active = models.BooleanField(default=True)
     objects = UserManager()
 
     USERNAME_FIELD = "email"
-
-    class Meta:
-
-        permissions = (
-            ("basic", "To get basic pic"),
-            ("premium", "To get bigger pic"),
-            ("enterprise", "To get pic and link"),
-            ("custom", "Custom"),
-        )

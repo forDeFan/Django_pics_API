@@ -25,3 +25,18 @@ class Image(models.Model):
         unique_together = ('owner', 'image')
 
 
+class Tier(models.Model):
+    """ 
+    Tier model class.
+    """
+    name = models.CharField(max_length=100, default="Basic")
+    thumbnail_small = models.BooleanField(default=True)
+    thumbnail_large = models.BooleanField(default=False)
+    image_link = models.BooleanField(default=False)
+
+    def __str__(self) -> str:
+        """
+        Returns name value in str representation of the Tier object. 
+        """
+        return "%s %s"%(self.name, " tier")
+    
