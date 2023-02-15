@@ -1,6 +1,11 @@
 from images.models import Image
-from images.serializers import ImageSerializer
-from rest_framework import viewsets
+from images.serializers import (
+    BasicTierImageSerializer,
+    EnterpriseTierImageSerializer,
+    PremiumTierImageSerializer,
+)
+from PIL import Image as pil_img  # To avoid namespace conflicts
+from rest_framework import serializers, viewsets
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 
@@ -11,40 +16,85 @@ class ImageCreateView(viewsets.ModelViewSet):
     """
 
     parser_classes = (MultiPartParser,)
-    serializer_class = ImageSerializer
     queryset = Image.objects.all()
     permission_classes = [IsAuthenticated]
 
+    def get_serializer_class(self) -> serializers.ModelSerializer:
+        """Set up serializer class in relation to user Tier plan."""
+        try:
+            if self.request.user.tier.name == "premium" or "Premium":
+                return PremiumTierImageSerializer
+            if (
+                self.request.user.tier.name == "enterprise"
+                or "Enterprise"
+            ):
+                return EnterpriseTierImageSerializer
+            return BasicTierImageSerializer
+        except:
+            return BasicTierImageSerializer
+
     def perform_create(self, serializer):
+
         user = self.request.user
-        user_groups = [group.name for group in user.groups.all()]
+        user_tier = user.tier.name
 
-        if "basic" in user_groups:
+        # Save uploaded Image to instance
+        instance = serializer.save(owner=user)
+        # Get saved image path
+        image_path = instance.image_link.path
+
+        im = pil_img.open(image_path)
+
+        if user_tier == "Basic":
             thumbnail_size = (200, 200)
-        else:
-            thumbnail_size = (500, 500)
+            im.thumbnail(thumbnail_size)
+            thumbnail_path = (
+                f"{image_path.split('.')[0]}-small-thumbnail.jpg"
+            )
+            im.save(thumbnail_path)
+            instance.image = thumbnail_path
 
-        image = serializer.save(owner=user)
-        image_path = image.image.path
+        if user_tier == "Premium":
+            thumbnail_size = (450, 450)
+            im.thumbnail(thumbnail_size)
+            thumbnail_path = (
+                f"{image_path.split('.')[0]}-large-thumbnail.jpg"
+            )
+            im.save(thumbnail_path)
+            instance.thumbnail_large = thumbnail_path
+            instance.image_link = image_path
 
-        from PIL import Image
-
-        im = Image.open(image_path)
-        im.thumbnail(thumbnail_size)
-        im.save(f"thumbnail_{image.name}.jpg")
+        # Save changes in Image instance
+        instance.save()
 
 
 class ImageListView(viewsets.ModelViewSet):
     """
     API view to retrieve list of all images uploaded by
-    a specific user.
+    a specific user
     """
 
-    serializer_class = ImageSerializer
     queryset = Image.objects.all()
     permission_classes = [IsAuthenticated]
 
+    def get_serializer_class(self) -> serializers.ModelSerializer:
+        """
+        Set up serializer class in relation to user Tier plan.
+        Will return fields in Response - in relation to user plan.
+        """
+        try:
+            if self.request.user.tier.name == "premium" or "Premium":
+                return PremiumTierImageSerializer
+            if (
+                self.request.user.tier.name == "enterprise"
+                or "Enterprise"
+            ):
+                return EnterpriseTierImageSerializer
+            return BasicTierImageSerializer
+        except:
+            return BasicTierImageSerializer
+
     def get_queryset(self):
-        """Return list of all images owned by a user."""
+        """Return list of all images owned by user."""
         user = self.request.user
         return Image.objects.filter(owner=user)
