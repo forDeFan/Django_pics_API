@@ -11,6 +11,7 @@ class UserAdmin(BaseUserAdmin):
     """Define users page in admin panel"""
 
     def tier(self, user) -> List:
+        """If there will be more tiers in tge future."""
         tiers = []
         for tier in user.tier.all():
             tiers.append(tier.name)
@@ -61,6 +62,6 @@ class UserAdmin(BaseUserAdmin):
         ),
     )
 
-
+# Attach models to admin panel.
 admin.site.register(user_model.User, UserAdmin)
 admin.site.register(image_model.Tier)
