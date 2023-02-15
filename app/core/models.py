@@ -34,12 +34,11 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     """Class for system User."""
 
-    # Default id=1 in tier field taken from command where default tier is created 
-    # default value set to this id in order to avoid not-null constraint error
-    # at supersuser creation (tier do not exist in db yet).
-
     email = models.EmailField(max_length=255, unique=True)
-    name = models.CharField(max_length=255, default="Basic")
+    name = models.CharField(max_length=255)
+    # Default id=1 taken from command where default tier is created 
+    # default value set in order to avoid not-null constraint error
+    # at supersuser creation (tier do not exist in db yet).
     tier = models.ForeignKey(
         Tier, on_delete=models.DO_NOTHING, default="1"
     )
