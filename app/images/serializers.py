@@ -1,84 +1,75 @@
-from django.db import models
-from images.models import Image, Tier
+from images.models import BasicTier, Image
 from rest_framework import serializers
 
 
 class BasicTierImageSerializer(serializers.ModelSerializer):
-    """Serializer for Image class for user in Basic Tier plan."""
-
-    image_path = models.FileField(blank=False, null=False)
+    """Serializer for Image in user Basic Tier plan."""
 
     class Meta:
         model = Image
-        fields = ("id", "image_link", "thumbnail_small")
+        fields = ("id", "owner", "image_link")
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["image_link"] = ""
+        representation["thumbnail_small"] = instance.thumbnail_small
+        representation["thumbnail_large"] = ""
+        representation["expiring_link"] = ""
+
+        return representation
 
 
 class PremiumTierImageSerializer(serializers.ModelSerializer):
-    """Serializer for Image class for user in Premium Tier plan."""
-
-    image_path = models.FileField(blank=False, null=False)
+    """Serializer for Image in Premium Tier plan."""
 
     class Meta:
         model = Image
-        fields = (
-            "id",
-            "image_link",
-            "thumbnail_small",
-            "thumbnail_large",
-        )
+        fields = ("id", "owner", "image_link")
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["thumbnail_small"] = instance.thumbnail_small
+        representation["thumbnail_large"] = instance.thumbnail_large
+        representation["expiring_link"] = ""
+
+        return representation
 
 
 class EnterpriseTierImageSerializer(serializers.ModelSerializer):
-    """Serializer for Image class for user in Enterprise Tier plan."""
-
-    image_path = models.FileField(blank=False, null=False)
+    """Serializer for Image in Enterprise Tier plan."""
 
     class Meta:
         model = Image
-        fields = (
-            "id",
-            "image_link",
-            "thumbnail_small",
-            "thumbnail_large",
-            "expiring_link",
-        )
+        fields = ("id", "owner", "image_link")
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["thumbnail_small"] = instance.thumbnail_small
+        representation["thumbnail_large"] = instance.thumbnail_large
+        representation["expiring_link"] = instance.expiring_link
+
+        return representation
+
+
+class CustomTierImageSerializer(serializers.ModelSerializer):
+    """Serializer for Image in Custom Tier plan."""
+
+    class Meta:
+        model = Image
+        fields = ("id", "owner", "image_link")
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["thumbnail_small"] = instance.thumbnail_small
+        representation["thumbnail_large"] = instance.thumbnail_large
+        representation["expiring_link"] = instance.expiring_link
+
+        return representation
 
 
 class TierSerializer(serializers.ModelSerializer):
     """Serializer of Tier class."""
 
     class Meta:
-        model = Tier
+        model = BasicTier
         fields = "__all__"
-
-
-"""
-POC
-
-from rest_framework import serializers
-
-class MyModelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MyModel
-        fields = '__all__'
-
-    def to_representation(self, instance):
-        # Call the parent to_representation() method to get the default representation
-        representation = super().to_representation(instance)
-        
-        # Check if the model is valid
-        if instance.is_valid():
-            # If valid, return a subset of the fields
-            representation = {
-                'field1': representation['field1'],
-                'field2': representation['field2']
-            }
-        else:
-            # If invalid, return a different subset of fields
-            representation = {
-                'field1': representation['field1'],
-                'field3': representation['field3']
-            }
-        
-        return representation
-"""
