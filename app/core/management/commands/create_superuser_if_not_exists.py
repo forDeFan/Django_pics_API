@@ -18,4 +18,4 @@ class Command(BaseCommand):
 
         User.objects.create_superuser(email=email, password=password)
 
-        self.stdout.write(f'Local user "{email}" was created')
+        self.stdout.write(f'Local superuser "{email}" was created')
