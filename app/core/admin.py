@@ -64,4 +64,5 @@ class UserAdmin(BaseUserAdmin):
 
 # Attach models to admin panel.
 admin.site.register(user_model.User, UserAdmin)
-admin.site.register(image_model.Tier)
+admin.site.register(image_model.BasicTier)
+admin.site.register(image_model.CustomTier)

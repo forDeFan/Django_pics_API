@@ -7,7 +7,7 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 from django.db import models
-from images.models import Tier
+from images.models import BasicTier
 
 
 class UserManager(BaseUserManager):
@@ -40,7 +40,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     # default value set in order to avoid not-null constraint error
     # at supersuser creation (tier do not exist in db yet).
     tier = models.ForeignKey(
-        Tier, on_delete=models.DO_NOTHING, default="1"
+        BasicTier, on_delete=models.DO_NOTHING, default="1"
     )
     is_staff = models.BooleanField(default=True)
     is_active = models.BooleanField(default=True)
