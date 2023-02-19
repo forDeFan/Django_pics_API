@@ -1,3 +1,4 @@
+from core.helpers import make_binary, make_thumbnail
 from django.db.models.query import QuerySet
 from images.models import (
     BasicTier,
@@ -12,7 +13,6 @@ from images.serializers import (
     EnterpriseTierImageSerializer,
     PremiumTierImageSerializer,
 )
-from PIL import Image as pil_img  # To avoid namespace conflicts
 from rest_framework import serializers, viewsets
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
@@ -32,59 +32,34 @@ def get_tier_type(req: Request) -> type[BasicTier]:
 
     for t in tier:
         return type(t)
-    
+
 
 def get_serializer(req: Request) -> serializers.ModelSerializer:
-        """
-        Helper function to set up serializer class in relation to request 
-        user Tier plan.
+    """
+    Helper function to set up serializer class in relation to request
+    user Tier plan.
 
-        Returns:
-            ModelSerializer: reference to appriopriate serializer
-        """
-        try:
-            tier_type = get_tier_type(req=req)
+    Returns:
+        ModelSerializer: reference to appriopriate serializer
+    """
+    try:
+        tier_type = get_tier_type(req=req)
 
-            if tier_type == PremiumTier:
-                return PremiumTierImageSerializer
-            if tier_type == EnterpriseTier:
-                return EnterpriseTierImageSerializer
-            if tier_type == CustomTier:
-                return CustomTierImageSerializer
-            return BasicTierImageSerializer
-        except:
-            return BasicTierImageSerializer
+        if tier_type == PremiumTier:
+            return PremiumTierImageSerializer
+        if tier_type == EnterpriseTier:
+            return EnterpriseTierImageSerializer
+        if tier_type == CustomTier:
+            return CustomTierImageSerializer
+        return BasicTierImageSerializer
+    except:
+        # For swagger api docs UI - when anonymous user, before authorize
+        return BasicTierImageSerializer
 
-
-
-def make_thumbnail(
-        req: Request,
-        size: int,
-        inst_img_path: object,
-        thumb_name: str,
-    ) -> str:
-
-        """
-        Helper function to produce thumbnail of desired size from uploaded image.
-
-        Returns:
-            str: absolute url path to uploaded image
-        """
-        img_path = inst_img_path
-        host_addres = req.get_host()
-        thumb_size = (size, size)
-
-        im = pil_img.open(img_path)
-        im.thumbnail(thumb_size)
-        thumb_path = f"{img_path.split('.')[0]}-{thumb_name}.jpg"
-        im.save(thumb_path)
-
-        abs_url = host_addres + thumb_path.replace("/app", "")
-        return abs_url
 
 class ImageCreateView(viewsets.ModelViewSet):
     """
-    API view to upload image.
+    API view for image uploading.
     """
 
     parser_classes = (MultiPartParser,)
@@ -100,31 +75,50 @@ class ImageCreateView(viewsets.ModelViewSet):
         """
         return get_serializer(req=self.request)
 
-
     def perform_create(self, serializer):
         """
-        Create object in db along with all model fields.
+        Creates and save image object.
+        Returns Response with serialized fields to the app user.
         """
 
         req_user = self.request.user
+        # Image object
         instance = serializer.save(owner=req_user)
 
+        # Links
         image_path = instance.image_link.path
         image_link = str(image_path).replace("/app/media", "")
 
+        # Thumbnail sizes
         small_thumb_size = req_user.tier.thumbnail_small_size
         large_thumb_size = req_user.tier.thumbnail_large_size
 
-        expiring_link = "expiring link"
+        # Expiring link empty val if not Enetrprise or Custom tier
+        expiring_link = ""
 
         tier_type = get_tier_type(req=self.request)
 
-        if tier_type == CustomTier or EnterpriseTier:
+        # Make image binary in expiring link for Enterprise and Custom tiers.
+        if (tier_type.__name__).__eq__(CustomTier.__name__) or (
+            tier_type.__name__
+        ).__eq__(EnterpriseTier.__name__):
+
             small_thumb_size = req_user.tier.thumbnail_small_size
             large_thumb_size = req_user.tier.thumbnail_large_size
             image_link = image_link
-            expiring_link = "expiring link"
 
+            tier = BasicTier.objects.filter(
+                name=req_user.tier.name
+            ).select_subclasses()
+
+            # If attachment of link in True in tier.expiring_link
+            for t in tier:
+                if(t.expiring_link):
+                    expiring_link = make_binary(
+                        req=self.request, inst_img_path=image_path
+                    )  
+
+        # Make thumbnails
         small_thumb = make_thumbnail(
             req=self.request,
             size=small_thumb_size,
@@ -142,10 +136,10 @@ class ImageCreateView(viewsets.ModelViewSet):
         # Populate instance fields
         instance.thumbnail_small = small_thumb
         instance.thumbnail_large = large_thumb
+        instance.expiring_link = expiring_link
         # Bit of hacking here - django throws UTF rncoding errors when
         # serializer.to_representation tryed to reach native image url.
         instance.image_link = image_link
-        instance.expiring_link = expiring_link
 
         # Save instance
         instance.save()
@@ -168,7 +162,6 @@ class ImageListView(viewsets.ModelViewSet):
             ModelSerializer: reference to appriopriate serializer
         """
         return get_serializer(req=self.request)
-
 
     def get_queryset(self) -> QuerySet:
         """
