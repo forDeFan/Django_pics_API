@@ -1,4 +1,4 @@
-from images.models import BasicTier, Image
+from images.models import Image
 from rest_framework import serializers
 
 
@@ -66,10 +66,3 @@ class CustomTierImageSerializer(serializers.ModelSerializer):
 
         return representation
 
-
-class TierSerializer(serializers.ModelSerializer):
-    """Serializer of Tier class."""
-
-    class Meta:
-        model = BasicTier
-        fields = "__all__"
