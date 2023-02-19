@@ -1,3 +1,9 @@
+"""
+Django command for database waiting when app in startup mode.
+It prevent app to crash while starting service up when
+database not ready for connection.
+"""
+
 import time
 
 from django.core.management.base import BaseCommand
@@ -6,14 +12,6 @@ from psycopg2 import OperationalError as Psycopg2Error
 
 
 class Command(BaseCommand):
-    """
-    Django command for database waiting when app in startup mode.
-    It prevent app to crash while starting service up when
-    database not ready for connection.
-    Args:
-        BaseCommand (): Django inherited class for commands.
-    """
-
     def handle(self, *args, **options):
         """
         Handle db checking.
