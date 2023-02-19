@@ -7,14 +7,13 @@ class BasicTierImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Image
-        fields = ("id", "owner", "image_link")
+        # Expiring second for swagger UI - to be visible in other plans
+        fields = ["image_link"]
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation["image_link"] = ""
         representation["thumbnail_small"] = instance.thumbnail_small
-        representation["thumbnail_large"] = ""
-        representation["expiring_link"] = ""
 
         return representation
 
@@ -24,13 +23,12 @@ class PremiumTierImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Image
-        fields = ("id", "owner", "image_link")
+        fields = ["image_link"]
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation["thumbnail_small"] = instance.thumbnail_small
         representation["thumbnail_large"] = instance.thumbnail_large
-        representation["expiring_link"] = ""
 
         return representation
 
@@ -40,7 +38,7 @@ class EnterpriseTierImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Image
-        fields = ("id", "owner", "image_link")
+        fields = ["image_link"]
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -56,7 +54,7 @@ class CustomTierImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Image
-        fields = ("id", "owner", "image_link")
+        fields = ["image_link"]
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
