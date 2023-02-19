@@ -28,6 +28,7 @@ load_dotenv()
 SECRET_KEY = os.getenv("DJANGO_SEC_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
+# Leaving it deribately set to True for now to not mess admin ststics
 DEBUG = True
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
@@ -132,8 +133,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = "/static/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
