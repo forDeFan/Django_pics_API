@@ -98,13 +98,19 @@ class ImageCreateView(viewsets.ModelViewSet):
 
         tier_type = get_tier_type(req=self.request)
 
-        # Make image binary in expiring link for Enterprise and Custom tiers.
+        # Make image binary in expiring link for Enterprise and Custom tiers
         if (tier_type.__name__).__eq__(CustomTier.__name__) or (
             tier_type.__name__
         ).__eq__(EnterpriseTier.__name__):
 
-            small_thumb_size = req_user.tier.thumbnail_small_size
-            large_thumb_size = req_user.tier.thumbnail_large_size
+            try:
+                small_thumb_size = req_user.tier.thumbnail_small_size
+                large_thumb_size = req_user.tier.thumbnail_large_size
+            # Set up thumb sizes for custom tier
+            except:
+                small_thumb_size = req_user.tier.small_thumb_size
+                large_thumb_size = req_user.tier.large_thumb_size
+
             image_link = image_link
 
             tier = BasicTier.objects.filter(
@@ -113,10 +119,10 @@ class ImageCreateView(viewsets.ModelViewSet):
 
             # If attachment of link in True in tier.expiring_link
             for t in tier:
-                if(t.expiring_link):
+                if t.expiring_link:
                     expiring_link = make_binary(
                         req=self.request, inst_img_path=image_path
-                    )  
+                    )
 
         # Make thumbnails
         small_thumb = make_thumbnail(

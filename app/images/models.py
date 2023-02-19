@@ -83,6 +83,11 @@ class CustomTier(BasicTier):
     """
     Custom tier model class.
     """
-    
+    small_thumb_size= models.IntegerField(
+        blank=True, default=200, editable=True
+    )
+    large_thumb_size = models.IntegerField(
+        blank=True, default=400, editable=True
+    )
     image_link = models.BooleanField(default=True, editable=True)
     expiring_link = models.BooleanField(default=True, editable=True)
