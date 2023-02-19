@@ -1,15 +1,8 @@
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from model_utils.managers import InheritanceManager
-
-
-def user_dir_path(instance: object, filename: str) -> str:
-    """
-    Customized path to upload images to.
-    Creates catalogue based on user 'id' value to upload images.
-    'owner.id' relates to 'owner' field in Image model.
-    """
-    return "images/{0}/{1}".format(instance.owner.id, filename)
+from django.utils import timezone
+from core.helpers import user_dir_path, validate_number_range
 
 
 class Image(models.Model):
@@ -22,6 +15,7 @@ class Image(models.Model):
     owner = models.ForeignKey(
         "core.User", on_delete=models.CASCADE, editable=False
     )
+    created = models.DateTimeField(default=timezone.now)
     thumbnail_small = models.CharField(
         max_length=255, null=True, blank=True
     )
@@ -33,6 +27,9 @@ class Image(models.Model):
         unique=False,
         validators=[FileExtensionValidator(["jpg", "png"])],
     )
+    seconds = models.IntegerField(
+        validators=[validate_number_range], default=300
+    )
     expiring_link = models.CharField(
         max_length=255, null=True, blank=True
     )
@@ -42,12 +39,6 @@ class AbstractTier(models.Model):
     # Lib to get child class type
     objects = InheritanceManager()
     name = models.CharField(max_length=100)
-    thumbnail_small_size = models.IntegerField(
-        blank=False, default=200, editable=False
-    )
-    thumbnail_large_size = models.IntegerField(
-        blank=False, default=200, editable=False
-    )
 
     class Meta:
         abstract = True
@@ -64,7 +55,12 @@ class BasicTier(AbstractTier):
     Basic tier model class.
     """
 
-    pass
+    thumbnail_small_size = models.IntegerField(
+        blank=True, default=200, editable=False
+    )
+    thumbnail_large_size = models.IntegerField(
+        blank=True, default=400, editable=False
+    )
 
 
 class PremiumTier(BasicTier):
@@ -83,19 +79,10 @@ class EnterpriseTier(PremiumTier):
     expiring_link = models.BooleanField(default=True, editable=False)
 
 
-class CustomTier(EnterpriseTier):
+class CustomTier(BasicTier):
     """
     Custom tier model class.
     """
-
-    pass
-
-
-# Set thumbnail size to Premium tier
-PremiumTier._meta.get_field("thumbnail_large_size").default = 400
-
-# Set fields for Custom tier
-CustomTier._meta.get_field("thumbnail_small_size").editable = True
-CustomTier._meta.get_field("thumbnail_large_size").editable = True
-CustomTier._meta.get_field("image_link").editable = True
-CustomTier._meta.get_field("expiring_link").editable = True
+    
+    image_link = models.BooleanField(default=True, editable=True)
+    expiring_link = models.BooleanField(default=True, editable=True)
