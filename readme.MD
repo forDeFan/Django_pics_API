@@ -80,6 +80,7 @@ b) Auth tab - select auth type: 'Basic Auth' and provide user credentials<br>
 c) Body tab - in KEY field select "File"<br>
 d) provide KEY field name "image_link" and in VALUE field click 'select files' to attach image to the request<br>
 e) send the request towards API<br>
+f) files will land in path: media/images/{user.id}/{filename}
 
 Depending on current user Tier plan - different JSON response will appear.
 
