@@ -2,7 +2,7 @@
 
 ## Explanation
 
-The idea here is to threat users equal on some level - to enable admin to change user tier plan while the app is operated by the user 
+The idea here is to treat users equal on some level - to enable admin to change user tier plan while the app is operated by the user 
 and enable user to receive various responses accordingly to current plan even if theimages were uploaded in higher or lower tier previously.
 
 
